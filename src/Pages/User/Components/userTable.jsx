@@ -152,17 +152,6 @@ export default function EnhancedTable({ rows, currentUser }) {
     };
 
     const [statusAnchorEl, setStatusAnchorEl] = React.useState(null);
-    const openStatus = Boolean(statusAnchorEl);
-    const handleStatusClick = (event, row) => {
-        setStatusAnchorEl(event.currentTarget);
-        setSelectedRow(row);
-    };
-
-    const handleStatusClose = () => {
-        setStatusAnchorEl(null);
-    };
-
-    const [openDialog, setOpenDialog] = useState(false);
 
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('title');
@@ -195,22 +184,22 @@ export default function EnhancedTable({ rows, currentUser }) {
         toast.success("User Added successfully!");
     }
 
-    const handleSubmit = (values) => {
-        const newTask = {
-            id: `task_${existingTasks.length + 1}`,
-            ...values,
-            createdAt: new Date().toISOString(),
-        };
+    // const handleSubmit = (values) => {
+    //     const newTask = {
+    //         id: `task_${existingTasks.length + 1}`,
+    //         ...values,
+    //         createdAt: new Date().toISOString(),
+    //     };
 
-        const updatedTasks = [...existingTasks, newTask];
+    //     const updatedTasks = [...existingTasks, newTask];
 
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+    //     localStorage.setItem("tasks", JSON.stringify(updatedTasks));
 
-        dispatch(setTasks(updatedTasks));
+    //     dispatch(setTasks(updatedTasks));
 
-        setOpenDialog(false);
-        toast.success("Task added successfully!");
-    };
+    //     setOpenDialog(false);
+    //     toast.success("Task added successfully!");
+    // };
 
     const handleUpdateClick = () => {
         setOpenUpdateDialog(true);
@@ -296,7 +285,7 @@ export default function EnhancedTable({ rows, currentUser }) {
                         <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
                             <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleRequestSort} currentUser={currentUser} />
                             <TableBody>
-                                {filteredUsers?.map((row) => (
+                                {(handleSearch ? filteredUsers : visibleRows)?.map((row) => (
                                     <TableRow key={row?.id}>
                                         <TableCell>{row?.id}</TableCell>
                                         <TableCell>{row?.name}</TableCell>
