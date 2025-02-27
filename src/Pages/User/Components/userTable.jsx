@@ -82,7 +82,7 @@ EnhancedTable.defaultProps = {
     rows: []
 };
 
-function EnhancedTableToolbar({ setOpenDialog }) {
+function EnhancedTableToolbar({ setOpenDialog, setHandleSearch }) {
     return (
         <Toolbar
             sx={{
@@ -108,7 +108,7 @@ function EnhancedTableToolbar({ setOpenDialog }) {
                     label="Search"
                     variant="outlined"
                     size="small"
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={(e) => setHandleSearch(e.target.value)}
                 />
             </Box>
 
@@ -135,6 +135,7 @@ export default function EnhancedTable({ rows, currentUser }) {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
     const [openViewDialog, setOpenViewDialog] = useState(false);
+    const [handleSearch, setHandleSearch] = useState("");
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [selectedRow, setSelectedRow] = useState(null);
@@ -160,20 +161,6 @@ export default function EnhancedTable({ rows, currentUser }) {
     const handleStatusClose = () => {
         setStatusAnchorEl(null);
     };
-
-    const updateStatus = (status) => {
-        const updatedTasks = existingTasks.map(task =>
-            task.id === selectedRow.id ? { ...task, status } : task
-        );
-
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-
-        dispatch(setTasks(updatedTasks));
-
-        setOpenDialog(false);
-        setStatusAnchorEl(false);
-        toast.success("Status updated successfully!");
-    }
 
     const [openDialog, setOpenDialog] = useState(false);
 
@@ -262,6 +249,12 @@ export default function EnhancedTable({ rows, currentUser }) {
         toast.success("User deleted successfully!");
     }
 
+    const filteredUsers = rows?.filter(user =>
+        user.name.toLowerCase().includes(handleSearch.toLowerCase()) ||
+        user.email.toLowerCase().includes(handleSearch.toLowerCase()) ||
+        user.role.toLowerCase().includes(handleSearch.toLowerCase())
+    );
+
     return (
         <>
             {openAddDialog && (
@@ -298,12 +291,12 @@ export default function EnhancedTable({ rows, currentUser }) {
             )}
             <Box sx={{ width: '100%' }}>
                 <Paper sx={{ width: '100%', mb: 2 }}>
-                    <EnhancedTableToolbar setOpenDialog={setAddOpenDialog} />
+                    <EnhancedTableToolbar setOpenDialog={setAddOpenDialog} setHandleSearch={setHandleSearch} />
                     <TableContainer>
                         <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
                             <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleRequestSort} currentUser={currentUser} />
                             <TableBody>
-                                {visibleRows.map((row) => (
+                                {filteredUsers?.map((row) => (
                                     <TableRow key={row?.id}>
                                         <TableCell>{row?.id}</TableCell>
                                         <TableCell>{row?.name}</TableCell>
