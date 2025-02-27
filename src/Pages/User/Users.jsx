@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Table from '../Components/userTable';
-import Navbar from '../Components/navbar';
+import Table from './Components/userTable'
+import Navbar from '../../Components/navbar';
 
 function User({ users }) {
   console.log("userssss are", users)
@@ -22,7 +22,7 @@ function User({ users }) {
 
   return (
     <>
-      <Navbar currentUser={currentUser} />
+      <Navbar currentUser={currentUser} title={"Task"}/>
       <Table rows={users} currentUser={currentUser} />
     </>
   );

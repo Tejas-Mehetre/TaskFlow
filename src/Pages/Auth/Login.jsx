@@ -1,18 +1,18 @@
 import React, { useEffect } from "react";
 import { Formik, Form } from "formik";
-import LoginSchema from "../Schema/loginSchema";
+import LoginSchema from "../../Schema/loginSchema";
 import { Button, TextField, Box, Grid, Typography } from "@mui/material";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import loginImg from "../assets/loginImg.webp";
-import logo from "../assets/logo.jpeg";
+import loginImg from "../../assets/loginImg.webp"
+import logo from "../../assets/logo.jpeg";
 
 function Login() {
     const navigate = useNavigate();
 
     useEffect(() => {
         const currentUser = localStorage.getItem("currentUser");
-        if (currentUser) navigate("/");
+        if (currentUser) navigate("/tasks");
     }, [navigate]);
 
     const users = useSelector(state => state.users.users);
@@ -22,7 +22,7 @@ function Login() {
 
         if (user) {
             localStorage.setItem("currentUser", JSON.stringify(user));
-            navigate("/");
+            navigate("/tasks");
         } else {
             setErrors({ email: "Invalid email or password" });
         }

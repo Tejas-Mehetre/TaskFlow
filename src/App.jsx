@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Login from "./Pages/Login";
-import Home from "./Pages/Home";
+import Login from "./Pages/Auth/Login"
+import User from "./Pages/User/Users"
+import Task from "./Pages/Task/Task";
 import { useSelector, useDispatch } from "react-redux";
 import tasksData from "./data/tasksData";
 import { useEffect } from "react";
 import { setTasks } from "./Redux/Slice/taskSlice";
 import userData from './data/userData'
 import { setUser } from "./Redux/Slice/userSlice";
-import User from './Pages/Users'
 
 function App() {
   const dispatch = useDispatch();
@@ -42,7 +42,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Home rows={tasks} />} />
+        <Route path="/tasks" element={<Task rows={tasks} />} />
         <Route path="/users" element={<User users={users} />} />
       </Routes>
     </BrowserRouter>

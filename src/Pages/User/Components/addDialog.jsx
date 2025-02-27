@@ -1,12 +1,10 @@
 import * as React from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, MenuItem } from '@mui/material';
 import { Formik, Form, Field } from "formik";
-import TaskSchema from "../Schema/taskSchema";
-import { useSelector } from 'react-redux';
+import addUserSchema from '../../../Schema/addUserSchema';
+// import { useSelector } from 'react-redux';
 
-export default function FormDialog({ openDialog, setOpenDialog, title,initialValues ,onSubmit }) {
-    const users = useSelector(state => state.users.users);
-    console.log("users are", users);
+export default function AddUserDialog({ openDialog, setOpenDialog, title,initialValues ,onSubmit }) {
     const handleClose = () => {
         setOpenDialog(false);
     };
@@ -19,10 +17,10 @@ export default function FormDialog({ openDialog, setOpenDialog, title,initialVal
                 margin: "auto"
             }
         }}>
-            <DialogTitle>{title}</DialogTitle>
+            <DialogTitle>Add User</DialogTitle>
             <Formik
                 initialValues={initialValues}
-                validationSchema={TaskSchema}
+                validationSchema={addUserSchema}
                 onSubmit={(values) => {
                     onSubmit(values);
                     handleClose();
@@ -34,26 +32,39 @@ export default function FormDialog({ openDialog, setOpenDialog, title,initialVal
                             <Box mb={2}>
                                 <Field
                                     as={TextField}
-                                    name="title"
-                                    label="Title"
+                                    name="name"
+                                    label="Name"
                                     type="text"
                                     fullWidth
                                     variant="outlined"
-                                    error={touched.title && Boolean(errors.title)}
-                                    helperText={touched.title && errors.title}
+                                    error={touched.name && Boolean(errors.name)}
+                                    helperText={touched.name && errors.name}
                                 />
                             </Box>
 
                             <Box mb={2}>
                                 <Field
                                     as={TextField}
-                                    name="description"
-                                    label="Description"
-                                    type="textarea"
+                                    name="email"
+                                    label="Email"
+                                    type="email"
                                     fullWidth
                                     variant="outlined"
-                                    error={touched.description && Boolean(errors.description)}
-                                    helperText={touched.description && errors.description}
+                                    error={touched.email && Boolean(errors.email)}
+                                    helperText={touched.email && errors.email}
+                                />
+                            </Box>
+
+                            <Box mb={2}>
+                                <Field
+                                    as={TextField}
+                                    name="password"
+                                    label="Password"
+                                    type="password"
+                                    fullWidth
+                                    variant="outlined"
+                                    error={touched.password && Boolean(errors.password)}
+                                    helperText={touched.password && errors.password}
                                 />
                             </Box>
 
@@ -61,39 +72,18 @@ export default function FormDialog({ openDialog, setOpenDialog, title,initialVal
                                 <Field
                                     as={TextField}
                                     select
-                                    name="status"
-                                    label="Status"
+                                    name="role"
+                                    label="Role"
                                     fullWidth
                                     variant="outlined"
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    error={touched.status && Boolean(errors.status)}
-                                    helperText={touched.status && errors.status}
+                                    error={touched.role && Boolean(errors.role)}
+                                    helperText={touched.role && errors.role}
                                 >
-                                    <MenuItem value="Pending">Pending</MenuItem>
-                                    <MenuItem value="In Progress">In Progress</MenuItem>
-                                    <MenuItem value="Completed">Completed</MenuItem>
-                                </Field>
-                            </Box>
-
-                            <Box mb={2}>
-                                <Field
-                                    as={TextField}
-                                    select
-                                    name="assignedTo"
-                                    label="Assign To"
-                                    fullWidth
-                                    variant="outlined"
-                                    onChange={handleChange}
-                                    onBlur={handleBlur}
-                                    error={touched.assignedTo && Boolean(errors.assignedTo)}
-                                    helperText={touched.assignedTo && errors.assignedTo}
-                                >
-                                    {users.map((user) => (
-                                        <MenuItem key={user.id} value={user.id}>
-                                            {user.name}
-                                        </MenuItem>
-                                    ))}
+                                    <MenuItem value="Admin">Admin</MenuItem>
+                                    <MenuItem value="Manager">Manager</MenuItem>
+                                    <MenuItem value="User">User</MenuItem>
                                 </Field>
                             </Box>
                         </DialogContent>

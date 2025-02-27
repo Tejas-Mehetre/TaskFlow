@@ -12,18 +12,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../assets/logo.jpeg"
 import { Button } from "@mui/material";
-import { ToastContainer, toast } from 'react-toastify';
-import AddUserDialog from './addUserDialog';
-import { setUser } from '../Redux/Slice/userSlice'
-import { useDispatch, useSelector } from "react-redux";
 
 
-export default function Navbar({ currentUser }) {
+export default function Navbar({ currentUser, title }) {
     const navigate = useNavigate();
-    const existingUsers = useSelector(state => state.users.users);
-    const dispatch = useDispatch();
 
-    const [openDialog, setOpenDialog] = useState(false);
     const [anchorEl, setAnchorEl] = useState(null);
     const open = Boolean(anchorEl);
 
@@ -39,33 +32,8 @@ export default function Navbar({ currentUser }) {
         navigate("/Login")
     }
 
-    const handleSubmit = (values) => {
-        const newUser = {
-            id: `user_${existingUsers.length + 1}`,
-            ...values,
-        };
-
-        const updatedUsers = [...existingUsers, newUser];
-        console.log(newUser, updatedUsers);
-
-        localStorage.setItem("users", JSON.stringify(updatedUsers));
-
-        dispatch(setUser(updatedUsers));
-
-        setOpenDialog(false);
-        toast.success("User Added successfully!");
-    }
-
     return (
         <>
-            {openDialog && (
-                <AddUserDialog
-                    openDialog={openDialog}
-                    setOpenDialog={setOpenDialog}
-                    initialValues={{ name: '', email: '', password: '', role: '' }}
-                    onSubmit={handleSubmit}
-                />
-            )}
             <nav style={{ backgroundColor: "#e1e3e3" }}>
                 <Box
                     sx={{
@@ -82,19 +50,13 @@ export default function Navbar({ currentUser }) {
                         currentUser?.role == "Admin" && (
                             <>
                                 <Button
-                                    onClick={() => setOpenDialog(true)}
+                                    onClick={() => {
+                                        title == "Task" ? navigate('/tasks') : navigate('/users')
+                                    }}
                                     variant="outlined"
                                     sx={{ borderColor: '#f502ed', color: '#f502ed', '&:hover': { borderColor: '#f502ed', color: '#f502ed' }, margin: '10px' }}
                                 >
-                                    Add User
-                                </Button>
-
-                                <Button
-                                    onClick={() => navigate("/users")}
-                                    variant="outlined"
-                                    sx={{ borderColor: '#f502ed', color: '#f502ed', '&:hover': { borderColor: '#f502ed', color: '#f502ed' }, margin: '10px' }}
-                                >
-                                    User List
+                                    {`${title} List`}
                                 </Button>
                             </>
                         )
@@ -162,7 +124,6 @@ export default function Navbar({ currentUser }) {
                     </MenuItem>
                 </Menu>
             </nav>
-            <ToastContainer position="bottom-right" autoClose={3000} />
         </>
     );
 }

@@ -1,10 +1,12 @@
 import * as React from 'react';
 import { Button, TextField, Dialog, DialogActions, DialogContent, DialogTitle, Box, MenuItem } from '@mui/material';
 import { Formik, Form, Field } from "formik";
-import addUserSchema from '../Schema/addUserSchema';
+import TaskSchema from "../../../Schema/taskSchema";
 import { useSelector } from 'react-redux';
 
-export default function AddUserDialog({ openDialog, setOpenDialog, title,initialValues ,onSubmit }) {
+export default function FormDialog({ openDialog, setOpenDialog, title, initialValues, onSubmit }) {
+    const users = useSelector(state => state.users.users);
+    console.log("users are", users);
     const handleClose = () => {
         setOpenDialog(false);
     };
@@ -17,10 +19,10 @@ export default function AddUserDialog({ openDialog, setOpenDialog, title,initial
                 margin: "auto"
             }
         }}>
-            <DialogTitle>Add User</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <Formik
                 initialValues={initialValues}
-                validationSchema={addUserSchema}
+                validationSchema={TaskSchema}
                 onSubmit={(values) => {
                     onSubmit(values);
                     handleClose();
@@ -32,39 +34,26 @@ export default function AddUserDialog({ openDialog, setOpenDialog, title,initial
                             <Box mb={2}>
                                 <Field
                                     as={TextField}
-                                    name="name"
-                                    label="Name"
+                                    name="title"
+                                    label="Title"
                                     type="text"
                                     fullWidth
                                     variant="outlined"
-                                    error={touched.name && Boolean(errors.name)}
-                                    helperText={touched.name && errors.name}
+                                    error={touched.title && Boolean(errors.title)}
+                                    helperText={touched.title && errors.title}
                                 />
                             </Box>
 
                             <Box mb={2}>
                                 <Field
                                     as={TextField}
-                                    name="email"
-                                    label="Email"
-                                    type="email"
+                                    name="description"
+                                    label="Description"
+                                    type="textarea"
                                     fullWidth
                                     variant="outlined"
-                                    error={touched.email && Boolean(errors.email)}
-                                    helperText={touched.email && errors.email}
-                                />
-                            </Box>
-
-                            <Box mb={2}>
-                                <Field
-                                    as={TextField}
-                                    name="password"
-                                    label="Password"
-                                    type="password"
-                                    fullWidth
-                                    variant="outlined"
-                                    error={touched.password && Boolean(errors.password)}
-                                    helperText={touched.password && errors.password}
+                                    error={touched.description && Boolean(errors.description)}
+                                    helperText={touched.description && errors.description}
                                 />
                             </Box>
 
@@ -72,24 +61,45 @@ export default function AddUserDialog({ openDialog, setOpenDialog, title,initial
                                 <Field
                                     as={TextField}
                                     select
-                                    name="role"
-                                    label="Role"
+                                    name="status"
+                                    label="Status"
                                     fullWidth
                                     variant="outlined"
                                     onChange={handleChange}
                                     onBlur={handleBlur}
-                                    error={touched.role && Boolean(errors.role)}
-                                    helperText={touched.role && errors.role}
+                                    error={touched.status && Boolean(errors.status)}
+                                    helperText={touched.status && errors.status}
                                 >
-                                    <MenuItem value="Admin">Admin</MenuItem>
-                                    <MenuItem value="Manager">Manager</MenuItem>
-                                    <MenuItem value="User">User</MenuItem>
+                                    <MenuItem value="Pending">Pending</MenuItem>
+                                    <MenuItem value="In Progress">In Progress</MenuItem>
+                                    <MenuItem value="Completed">Completed</MenuItem>
+                                </Field>
+                            </Box>
+
+                            <Box mb={2}>
+                                <Field
+                                    as={TextField}
+                                    select
+                                    name="assignedTo"
+                                    label="Assign To"
+                                    fullWidth
+                                    variant="outlined"
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    error={touched.assignedTo && Boolean(errors.assignedTo)}
+                                    helperText={touched.assignedTo && errors.assignedTo}
+                                >
+                                    {users.map((user) => (
+                                        <MenuItem key={user.id} value={user.id}>
+                                            {user.name}
+                                        </MenuItem>
+                                    ))}
                                 </Field>
                             </Box>
                         </DialogContent>
                         <DialogActions>
-                            <Button sx={{color:"#f502ed"}} onClick={handleClose}>Cancel</Button>
-                            <Button sx={{color:"#f502ed"}} type="submit">Add</Button>
+                            <Button sx={{ color: "#f502ed" }} onClick={handleClose}>Cancel</Button>
+                            <Button sx={{ color: "#f502ed" }} type="submit">Add</Button>
                         </DialogActions>
                     </Form>
                 )}

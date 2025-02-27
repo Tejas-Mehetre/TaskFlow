@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Table from '../Components/table';
-import Navbar from '../Components/navbar';
+import Table from './Components/table'
+import Navbar from '../../Components/navbar';
 
-function Home({ rows }) {
+function Task({ rows }) {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [filteredRows, setFilteredRows] = useState([]);
@@ -40,10 +40,10 @@ function Home({ rows }) {
 
   return (
     <>
-      <Navbar currentUser={currentUser} />
+      <Navbar currentUser={currentUser} title={"User"}/>
       <Table rows={filteredRows} currentUser={currentUser} />
     </>
   );
 }
 
-export default Home;
+export default Task;

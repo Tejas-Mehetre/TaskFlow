@@ -14,15 +14,16 @@ import Paper from '@mui/material/Paper';
 import { visuallyHidden } from '@mui/utils';
 import { TextField } from '@mui/material';
 import { Button } from '@mui/material';
-import FormDialog from './dialog';
+import AddUserDialog from './addDialog'
+import ViewDialog from './viewDialog';
+import DeleteDialog from './deleteDialog';
 import { useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
-import { setTasks } from '../Redux/Slice/taskSlice';
+import { setTasks } from '../../../Redux/Slice/taskSlice';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
-import DeleteDialog from './deleteDialog';
 import { ToastContainer, toast } from 'react-toastify';
-import ViewDialog from './viewDialog'
+import { setUser } from '../../../Redux/Slice/userSlice'
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) return -1;
@@ -45,6 +46,7 @@ function EnhancedTableHead({ order, orderBy, onRequestSort, currentUser }) {
         { id: 'userId', label: 'User Id' },
         { id: 'name', label: 'Name' },
         { id: 'email', label: 'Email' },
+        { id: 'password', label: 'Password' },
         { id: 'role', label: 'Role' },
     ];
 
@@ -80,14 +82,15 @@ EnhancedTable.defaultProps = {
     rows: []
 };
 
-function EnhancedTableToolbar({ currentUser, setOpenDialog }) {
+function EnhancedTableToolbar({ setOpenDialog }) {
     return (
         <Toolbar
             sx={{
                 pl: { sm: 2 },
                 pr: { xs: 1, sm: 1 },
                 display: "flex",
-                position: "relative"
+                justifyContent: "space-between",
+                alignItems: "center",
             }}
         >
             <Typography
@@ -99,30 +102,39 @@ function EnhancedTableToolbar({ currentUser, setOpenDialog }) {
                 Users
             </Typography>
 
-            <TextField
-                sx={{
-                    position: "absolute",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "30%"
-                }}
-                label="Search"
+            <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+                <TextField
+                    sx={{ width: "30%" }}
+                    label="Search"
+                    variant="outlined"
+                    size="small"
+                    onChange={(e) => handleSearch(e.target.value)}
+                />
+            </Box>
+
+            <Button
+                onClick={() => setOpenDialog(true)}
                 variant="outlined"
-                size="small"
-                onChange={(e) => handleSearch(e.target.value)}
-            />
+                sx={{
+                    borderColor: '#f502ed',
+                    color: '#f502ed',
+                    '&:hover': { borderColor: '#f502ed', color: '#f502ed' },
+                }}
+            >
+                Add
+            </Button>
         </Toolbar>
     );
 }
 
 export default function EnhancedTable({ rows, currentUser }) {
-    console.log("rows are", rows);
+    const existingUsers = useSelector(state => state.users.users);
+    const dispatch = useDispatch();
+
+    const [openAddDialog, setAddOpenDialog] = useState(false);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [openUpdateDialog, setOpenUpdateDialog] = useState(false);
     const [openViewDialog, setOpenViewDialog] = useState(false);
-
-    const dispatch = useDispatch();
-    const existingTasks = useSelector(state => state.tasks.tasks);
 
     const [anchorEl, setAnchorEl] = React.useState(null);
     const [selectedRow, setSelectedRow] = useState(null);
@@ -179,6 +191,23 @@ export default function EnhancedTable({ rows, currentUser }) {
         [order, orderBy, rows]
     );
 
+    const handleAddUser = (values) => {
+        const newUser = {
+            id: `user_${existingUsers.length + 1}`,
+            ...values,
+        };
+
+        const updatedUsers = [...existingUsers, newUser];
+        console.log(newUser, updatedUsers);
+
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+        dispatch(setUser(updatedUsers));
+
+        setOpenDialog(false);
+        toast.success("User Added successfully!");
+    }
+
     const handleSubmit = (values) => {
         const newTask = {
             id: `task_${existingTasks.length + 1}`,
@@ -202,16 +231,16 @@ export default function EnhancedTable({ rows, currentUser }) {
     }
 
     const handleUpdate = (values) => {
-        const updatedTasks = existingTasks.map(task =>
-            task.id === selectedRow.id ? { ...task, ...values } : task
+        const updatedUsers = existingUsers.map(user =>
+            user.id === selectedRow.id ? { ...user, ...values } : user
         );
 
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
 
-        dispatch(setTasks(updatedTasks));
+        dispatch(setUser(updatedUsers));
 
         setOpenDialog(false);
-        toast.success("Task updated successfully!");
+        toast.success("User updated successfully!");
     };
 
 
@@ -223,25 +252,24 @@ export default function EnhancedTable({ rows, currentUser }) {
     const handleDelete = () => {
         if (!selectedRow) return;
 
-        const updatedTasks = existingTasks.filter(task => task.id !== selectedRow.id);
+        const updatedUsers = existingUsers.filter(user => user.id !== selectedRow.id);
 
-        dispatch(setTasks(updatedTasks));
+        dispatch(setUser(updatedUsers));
 
-        localStorage.setItem("tasks", JSON.stringify(updatedTasks));
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
 
         setOpenDeleteDialog(false);
-        toast.success("Task deleted successfully!");
+        toast.success("User deleted successfully!");
     }
 
     return (
         <>
-            {openDialog && (
-                <FormDialog
-                    openDialog={openDialog}
-                    setOpenDialog={setOpenDialog}
-                    title="Add Task"
-                    initialValues={{ title: '', description: '', status: '', assignedTo: '' }}
-                    onSubmit={handleSubmit}
+            {openAddDialog && (
+                <AddUserDialog
+                    openDialog={openAddDialog}
+                    setOpenDialog={setAddOpenDialog}
+                    initialValues={{ name: '', email: '', password: '', role: '' }}
+                    onSubmit={handleAddUser}
                 />
             )}
 
@@ -249,15 +277,15 @@ export default function EnhancedTable({ rows, currentUser }) {
                 <ViewDialog
                     openDialog={openViewDialog}
                     setOpenDialog={setOpenViewDialog}
-                    selectedRow={{ title: selectedRow.title, description: selectedRow.description, status: selectedRow.status, assignedTo: selectedRow.assignedTo, createdAt: selectedRow.createdAt }}
+                    selectedRow={{ id: selectedRow.id, name: selectedRow.name, email: selectedRow.email, password: selectedRow.password, role: selectedRow.role, }}
                 />
             )}
             {openUpdateDialog && (
-                <FormDialog
+                <AddUserDialog
                     openDialog={openUpdateDialog}
                     setOpenDialog={setOpenUpdateDialog}
-                    title="Update Task"
-                    initialValues={{ title: selectedRow.title, description: selectedRow.description, status: selectedRow.status, assignedTo: selectedRow.assignedTo }}
+                    title="Update User"
+                    initialValues={{ name: selectedRow.name, email: selectedRow.email, password: selectedRow.password, role: selectedRow.role }}
                     onSubmit={handleUpdate}
                 />
             )}
@@ -270,7 +298,7 @@ export default function EnhancedTable({ rows, currentUser }) {
             )}
             <Box sx={{ width: '100%' }}>
                 <Paper sx={{ width: '100%', mb: 2 }}>
-                    <EnhancedTableToolbar currentUser={currentUser} setOpenDialog={setOpenDialog} />
+                    <EnhancedTableToolbar setOpenDialog={setAddOpenDialog} />
                     <TableContainer>
                         <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
                             <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleRequestSort} currentUser={currentUser} />
@@ -281,8 +309,10 @@ export default function EnhancedTable({ rows, currentUser }) {
                                         <TableCell>{row?.name}</TableCell>
                                         <TableCell>{row?.email}
                                         </TableCell>
+                                        <TableCell>{row?.password}
+                                        </TableCell>
                                         <TableCell>{row?.role}</TableCell>
-                                        {(currentUser?.role == "Admin") && <TableCell>
+                                        <TableCell sx={{ width: "10px" }}>
                                             <Button
                                                 id="basic-button"
                                                 aria-controls={open ? 'basic-menu' : undefined}
@@ -302,11 +332,14 @@ export default function EnhancedTable({ rows, currentUser }) {
                                                     'aria-labelledby': 'basic-button',
                                                 }}
                                             >
-                                                <MenuItem>View User</MenuItem>
-                                                <MenuItem>Update User</MenuItem>
-                                                <MenuItem>Delete User</MenuItem>
+                                                <MenuItem onClick={() => {
+                                                    setOpenViewDialog(true)
+                                                    setAnchorEl(false);
+                                                }}>View</MenuItem>
+                                                <MenuItem onClick={() => handleUpdateClick()}>Update</MenuItem>
+                                                <MenuItem onClick={() => handleDeleteClick()}>Delete</MenuItem>
                                             </Menu>
-                                        </TableCell>}
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
@@ -314,7 +347,7 @@ export default function EnhancedTable({ rows, currentUser }) {
                     </TableContainer>
                 </Paper>
             </Box>
-            <ToastContainer position="bottom-right" autoClose={3000} />
+            <ToastContainer position="bottom-right" />
         </>
     );
 }
