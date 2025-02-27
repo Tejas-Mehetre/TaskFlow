@@ -16,6 +16,7 @@ import { TextField } from '@mui/material';
 import { Button } from '@mui/material';
 import AddUserDialog from './addDialog'
 import ViewDialog from './viewDialog';
+import DeleteIcon from '@mui/icons-material/Delete';
 import DeleteDialog from './deleteDialog';
 import { useState } from 'react';
 import { useDispatch, useSelector } from "react-redux";
@@ -24,6 +25,7 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import { ToastContainer, toast } from 'react-toastify';
 import { setUser } from '../../../Redux/Slice/userSlice'
+import { Checkbox } from '@mui/material';
 
 function descendingComparator(a, b, orderBy) {
     if (b[orderBy] < a[orderBy]) return -1;
@@ -37,7 +39,7 @@ function getComparator(order, orderBy) {
         : (a, b) => -descendingComparator(a, b, orderBy);
 }
 
-function EnhancedTableHead({ order, orderBy, onRequestSort, currentUser }) {
+function EnhancedTableHead({ order, orderBy, onRequestSort, currentUser, onSelectAllClick, numSelected, rowCount }) {
     const createSortHandler = (property) => (event) => {
         onRequestSort(event, property);
     };
@@ -57,6 +59,14 @@ function EnhancedTableHead({ order, orderBy, onRequestSort, currentUser }) {
     return (
         <TableHead>
             <TableRow>
+                <TableCell padding="checkbox">
+                    <Checkbox
+                        color="primary"
+                        indeterminate={numSelected > 0 && numSelected < rowCount}
+                        checked={rowCount > 0 && numSelected === rowCount}
+                        onChange={onSelectAllClick}
+                    />
+                </TableCell>
                 {headCells.map((headCell) => (
                     <TableCell sx={{ fontWeight: "bold" }} key={headCell.id}>
                         <TableSortLabel
@@ -82,7 +92,7 @@ EnhancedTable.defaultProps = {
     rows: []
 };
 
-function EnhancedTableToolbar({ setOpenDialog, setHandleSearch }) {
+function EnhancedTableToolbar({ setOpenDialog, setHandleSearch, selected, handleMultipleDelete }) {
     return (
         <Toolbar
             sx={{
@@ -112,17 +122,25 @@ function EnhancedTableToolbar({ setOpenDialog, setHandleSearch }) {
                 />
             </Box>
 
-            <Button
-                onClick={() => setOpenDialog(true)}
-                variant="outlined"
-                sx={{
-                    borderColor: '#f502ed',
-                    color: '#f502ed',
-                    '&:hover': { borderColor: '#f502ed', color: '#f502ed' },
-                }}
-            >
-                Add
-            </Button>
+            {selected?.length > 0 ?
+                <Button
+                    onClick={handleMultipleDelete}
+                    sx={{
+                        color: 'black',
+                    }}
+                >
+                    <DeleteIcon />
+                </Button> : <Button
+                    onClick={() => setOpenDialog(true)}
+                    variant="outlined"
+                    sx={{
+                        borderColor: '#f502ed',
+                        color: '#f502ed',
+                        '&:hover': { borderColor: '#f502ed', color: '#f502ed' },
+                    }}
+                >
+                    Add
+                </Button>}
         </Toolbar>
     );
 }
@@ -151,8 +169,6 @@ export default function EnhancedTable({ rows, currentUser }) {
         setSelectedRow(null);
     };
 
-    const [statusAnchorEl, setStatusAnchorEl] = React.useState(null);
-
     const [order, setOrder] = useState('asc');
     const [orderBy, setOrderBy] = useState('title');
 
@@ -180,26 +196,9 @@ export default function EnhancedTable({ rows, currentUser }) {
 
         dispatch(setUser(updatedUsers));
 
-        setOpenDialog(false);
+        setAddOpenDialog(false);
         toast.success("User Added successfully!");
     }
-
-    // const handleSubmit = (values) => {
-    //     const newTask = {
-    //         id: `task_${existingTasks.length + 1}`,
-    //         ...values,
-    //         createdAt: new Date().toISOString(),
-    //     };
-
-    //     const updatedTasks = [...existingTasks, newTask];
-
-    //     localStorage.setItem("tasks", JSON.stringify(updatedTasks));
-
-    //     dispatch(setTasks(updatedTasks));
-
-    //     setOpenDialog(false);
-    //     toast.success("Task added successfully!");
-    // };
 
     const handleUpdateClick = () => {
         setOpenUpdateDialog(true);
@@ -215,10 +214,9 @@ export default function EnhancedTable({ rows, currentUser }) {
 
         dispatch(setUser(updatedUsers));
 
-        setOpenDialog(false);
+        setOpenUpdateDialog(false);
         toast.success("User updated successfully!");
     };
-
 
     const handleDeleteClick = () => {
         setOpenDeleteDialog(true);
@@ -243,6 +241,51 @@ export default function EnhancedTable({ rows, currentUser }) {
         user.email.toLowerCase().includes(handleSearch.toLowerCase()) ||
         user.role.toLowerCase().includes(handleSearch.toLowerCase())
     );
+
+    const [selected, setSelected] = useState([]);
+
+    const handleSelectAllClick = (event) => {
+        if (event.target.checked) {
+            setSelected(rows.map((row) => row.id));
+            return;
+        }
+        setSelected([]);
+    };
+
+    const handleCheckBoxClick = (event, id) => {
+        const selectedIndex = selected.indexOf(id);
+        let newSelected = [];
+
+        if (selectedIndex === -1) {
+            newSelected = newSelected.concat(selected, id);
+        } else if (selectedIndex === 0) {
+            newSelected = newSelected.concat(selected.slice(1));
+        } else if (selectedIndex === selected.length - 1) {
+            newSelected = newSelected.concat(selected.slice(0, -1));
+        } else if (selectedIndex > 0) {
+            newSelected = newSelected.concat(
+                selected.slice(0, selectedIndex),
+                selected.slice(selectedIndex + 1)
+            );
+        }
+
+        setSelected(newSelected);
+    };
+
+    const isSelected = (id) => selected.indexOf(id) !== -1;
+
+    const handleMultipleDelete = () => {
+        console.log(selected);
+        const updatedUsers = existingUsers.filter(user => !selected.includes(user.id)); 
+        console.log(updatedUsers);
+
+        dispatch(setUser(updatedUsers));
+
+        localStorage.setItem("users", JSON.stringify(updatedUsers));
+
+        setSelected([]);
+        toast.success("Selected users deleted successfully!");
+    }
 
     return (
         <>
@@ -280,51 +323,62 @@ export default function EnhancedTable({ rows, currentUser }) {
             )}
             <Box sx={{ width: '100%' }}>
                 <Paper sx={{ width: '100%', mb: 2 }}>
-                    <EnhancedTableToolbar setOpenDialog={setAddOpenDialog} setHandleSearch={setHandleSearch} />
+                    <EnhancedTableToolbar setOpenDialog={setAddOpenDialog} setHandleSearch={setHandleSearch} selected={selected} handleMultipleDelete={handleMultipleDelete}/>
                     <TableContainer>
                         <Table sx={{ minWidth: 750 }} aria-labelledby="tableTitle">
-                            <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleRequestSort} currentUser={currentUser} />
+                            <EnhancedTableHead order={order} orderBy={orderBy} onRequestSort={handleRequestSort} currentUser={currentUser} onSelectAllClick={handleSelectAllClick} numSelected={selected?.length} rowCount={rows?.length} />
                             <TableBody>
-                                {(handleSearch ? filteredUsers : visibleRows)?.map((row) => (
-                                    <TableRow key={row?.id}>
-                                        <TableCell>{row?.id}</TableCell>
-                                        <TableCell>{row?.name}</TableCell>
-                                        <TableCell>{row?.email}
-                                        </TableCell>
-                                        <TableCell>{row?.password}
-                                        </TableCell>
-                                        <TableCell>{row?.role}</TableCell>
-                                        <TableCell sx={{ width: "10px" }}>
-                                            <Button
-                                                id="basic-button"
-                                                aria-controls={open ? 'basic-menu' : undefined}
-                                                aria-haspopup="true"
-                                                aria-expanded={open ? 'true' : undefined}
-                                                sx={{ color: "black" }}
-                                                onClick={(event) => handleClick(event, row)}
-                                            >
-                                                <MoreVertIcon />
-                                            </Button>
-                                            <Menu
-                                                id="basic-menu"
-                                                anchorEl={anchorEl}
-                                                open={open}
-                                                onClose={handleClose}
-                                                MenuListProps={{
-                                                    'aria-labelledby': 'basic-button',
-                                                }}
-                                            >
-                                                <MenuItem onClick={() => {
-                                                    setOpenViewDialog(true)
-                                                    setAnchorEl(false);
-                                                }}>View</MenuItem>
-                                                <MenuItem onClick={() => handleUpdateClick()}>Update</MenuItem>
-                                                <MenuItem onClick={() => handleDeleteClick()}>Delete</MenuItem>
-                                            </Menu>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {(handleSearch ? filteredUsers : visibleRows)?.map((row) => {
+                                    const isItemSelected = isSelected(row.id);
+                                    return (
+                                        <TableRow key={row?.id} onClick={(event) => handleCheckBoxClick(event, row.id)} role="checkbox" selected={isItemSelected}>
+                                            <TableCell padding="checkbox">
+                                                <Checkbox
+                                                    color="primary"
+                                                    checked={isItemSelected}
+                                                    onClick={(event) => handleCheckBoxClick(event, row.id)}
+                                                />
+                                            </TableCell>
+                                            <TableCell>{row?.id}</TableCell>
+                                            <TableCell>{row?.name}</TableCell>
+                                            <TableCell>{row?.email}</TableCell>
+                                            <TableCell>{row?.password}</TableCell>
+                                            <TableCell>{row?.role}</TableCell>
+                                            {currentUser?.role === "Admin" && (
+                                                <TableCell sx={{ width: "10px" }}>
+                                                    <Button
+                                                        id="basic-button"
+                                                        aria-controls={open ? 'basic-menu' : undefined}
+                                                        aria-haspopup="true"
+                                                        aria-expanded={open ? 'true' : undefined}
+                                                        sx={{ color: "black" }}
+                                                        onClick={(event) => handleClick(event, row)}
+                                                    >
+                                                        <MoreVertIcon />
+                                                    </Button>
+                                                    <Menu
+                                                        id="basic-menu"
+                                                        anchorEl={anchorEl}
+                                                        open={open}
+                                                        onClose={handleClose}
+                                                        MenuListProps={{
+                                                            'aria-labelledby': 'basic-button',
+                                                        }}
+                                                    >
+                                                        <MenuItem onClick={() => {
+                                                            setOpenViewDialog(true)
+                                                            setAnchorEl(false);
+                                                        }}>View</MenuItem>
+                                                        <MenuItem onClick={() => handleUpdateClick()}>Update</MenuItem>
+                                                        <MenuItem onClick={() => handleDeleteClick()}>Delete</MenuItem>
+                                                    </Menu>
+                                                </TableCell>
+                                            )}
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
+
                         </Table>
                     </TableContainer>
                 </Paper>
